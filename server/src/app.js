@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.use(middlewares.auth);
 
-app.use('/api', api);
+app.use('/', api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
