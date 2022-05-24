@@ -1,0 +1,92 @@
+{
+  "accounts": [
+    {
+      "name": "Plaid Checking",
+      "plaid_account_id": "rMDALDJBjwTy57466Rp3CMwVJEPjkgtla96ZE",
+      "mask": "0000",
+      "official_name": "Plaid Gold Standard 0% Interest Checking",
+      "current_balance": "1010.0",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "depository",
+      "account_subtype": "checking"
+    },
+    {
+      "name": "Plaid Saving",
+      "plaid_account_id": "zWrR4rmjnzFzAXv55e1kFmVXlAPJwnuowBLxz",
+      "mask": "1111",
+      "official_name": "Plaid Silver Standard 0.1% Interest Saving",
+      "current_balance": "8000.0",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "depository",
+      "account_subtype": "savings"
+    },
+    {
+      "name": "Plaid Credit Card",
+      "plaid_account_id": "3EbzWbK8QJFG98PqqAlRia6bQwl5ZESqMbn93",
+      "mask": "3333",
+      "official_name": "Plaid Diamond 12.5% APR Interest Credit Card",
+      "current_balance": "410.0",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "credit",
+      "account_subtype": "credit card"
+    },
+    {
+      "name": "Plaid Credit Card",
+      "plaid_account_id": "Ibclh7UYaH2qsursZXSJbYgr6TADCRsN7M0Mw",
+      "mask": "2222",
+      "official_name": "Plaid Infinite 10% APR Interest Credit Card",
+      "current_balance": "-175.0",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "credit",
+      "account_subtype": "credit card"
+    },
+    {
+      "name": "Plaid Student Loan",
+      "plaid_account_id": "4WbB3brEMZFGg8kKKDBEi4KxWgbeNzCdnVAaR",
+      "mask": "7777",
+      "official_name": "",
+      "current_balance": "65262.0",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "loan",
+      "account_subtype": "student"
+    },
+    {
+      "name": "Plaid Mortgage",
+      "plaid_account_id": "NZNmeNR4APhn3oMJJyv5hGnz5qM3A4tWnp5M8",
+      "mask": "8888",
+      "official_name": "",
+      "current_balance": "56302.06",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "loan",
+      "account_subtype": "mortgage"
+    },
+    {
+      "name": "Plaid Stock Investment",
+      "plaid_account_id": "aqX4EXeno7Clk5Zgg6Bvu3PrJBAzXWF71JQgD",
+      "mask": "6666",
+      "official_name": "",
+      "current_balance": "23631.98",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "investment",
+      "account_subtype": "stocks"
+    },
+    {
+      "name": "Plaid US Cash",
+      "plaid_account_id": "qrqcNw7JxKF6nUuMPMHW1Q1Zh83SkyQ6gKqe7",
+      "mask": "9999",
+      "official_name": "",
+      "current_balance": "68029.12",
+      "iso_currency_code": "USD",
+      "unofficial_currency_code": null,
+      "account_type": "investment",
+      "account_subtype": "cash"
+    }
+  ]
+}
