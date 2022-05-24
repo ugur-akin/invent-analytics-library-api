@@ -1,89 +1,112 @@
 /* eslint-disable no-console */
 
 const fs = require('fs');
+const seedrandom = require('seedrandom');
 
-const { DateTime } = require('luxon');
-const { User, Account, Transaction } = require('./models');
+const { User, Book, Borrow } = require('./models');
 const db = require('./db');
 
-const rawAccounts = fs.readFileSync('src/db/json/accounts.json');
-const { accounts } = JSON.parse(rawAccounts);
+const rawUsers = fs.readFileSync('src/db/json/users.json');
+const { users: userJsons } = JSON.parse(rawUsers);
 
-const rawTransactions = fs.readFileSync('src/db/json/transactions.json');
-const { transactions } = JSON.parse(rawTransactions);
+const rawBooks = fs.readFileSync('src/db/json/books.json');
+const { books: bookJsons } = JSON.parse(rawBooks);
 
-const strToDate = (dateStr) => DateTime.fromJSDate(new Date(dateStr));
+const _RANDOM_SEED = 294729043;
+const _MAX_NUM_BORROWS = 50;
+const _MIN_PAST_DATE = new Date(2021, 0);
+const _MIN_BORROW_DURATION_IN_MS = 1 * 60 * 60 * 100; // 1 hour
+const _MAX_BORROW_DURATION_IN_MS = 10 * 24 * 60 * 60 * 100; // 10 days
+
+seedrandom(_RANDOM_SEED, { global: true });
+
+const randomDate = (minDate, maxDate = Date.now()) => {
+  const msDiff = maxDate - minDate;
+  const msElapsed = Math.floor(Math.random() * msDiff);
+  const clampedMsElapsed = Math.min(
+    Math.max(msElapsed, _MAX_BORROW_DURATION_IN_MS),
+    _MIN_BORROW_DURATION_IN_MS
+  );
+  const result = minDate + clampedMsElapsed;
+  return result;
+};
 
 async function seed() {
   await db.sync({ force: true });
   console.log('db schema synced!');
 
   // Users
-  const user1 = await User.create({
-    email: 'test@test.com',
-    passwordDigest: 'sample',
-  });
+  const userPromises = Promise.all(
+    userJsons.map(async ({ name }) => {
+      try {
+        const user = await User.create({
+          name,
+        });
+        return user;
+      } catch (error) {
+        console.log('Something went wrong while creating a user:', error);
+      }
+    })
+  );
 
-  // Accounts
-  const accountLookup = {};
-  accounts.forEach(async (accountJSON) => {
+  // Books
+  const bookPromises = Promise.all(
+    bookJsons.map(async ({ name }) => {
+      try {
+        const book = await Book.create({
+          name,
+        });
+        return book;
+      } catch (error) {
+        console.log('Something went wrong while creating a book:', error);
+      }
+    })
+  );
+
+  const users = await userPromises;
+  const books = await bookPromises;
+
+  console.log(`Successfully created ${users.length} users!`);
+  console.log(`Successfully created ${books.length} books!`);
+
+  // Borrows
+  let numBorrowsCreated = 0;
+  const borrowPromises = users.flatMap(async (user) => {
     try {
-      const account = await Account.create({
-        name: accountJSON.name,
-        plaidAccountId: accountJSON.plaid_account_id,
-        mask: accountJSON.mask,
-        officialName: accountJSON.official_name,
-        currentBalance: Number.parseFloat(accountJSON.current_balance),
-        isoCurrencyCode: accountJSON.iso_currency_code,
-        unofficialCurrencyCode: accountJSON.unofficial_currency_code,
-        accountSubtype: accountJSON.account_subtype,
-        accountType: accountJSON.account_type,
+      const numBorrows = Math.floor(Math.random() * _MAX_NUM_BORROWS);
+      const borrowArray = Array.from({ length: numBorrows }, (i) => i);
+      const borrowPromisesForUser = borrowArray.flatMap(() => {
+        // NOTE: Exclude last book so we always have one without a score.
+        const bookIdx = Math.floor(Math.random() * books.length);
+        const book = books[bookIdx];
+        const takenAt = randomDate(_MIN_PAST_DATE);
+
+        const isReturned = !!Math.round(Math.random());
+        const returnedAt = isReturned ? randomDate(takenAt) : null;
+
+        const score = isReturned ? Math.floor(Math.random() * 10) : null;
+
+        const borrow = Borrow.create({
+          userId: user.id,
+          bookId: book.id,
+          takenAt,
+          returnedAt,
+          score,
+        });
+
+        numBorrowsCreated += 1;
+        return borrow;
       });
-      accountLookup[account.plaidAccountId] = account;
-      account.setUser(user1);
+
+      return Promise.all(borrowPromisesForUser);
     } catch (error) {
-      console.log('error', error);
+      console.log('Something went wrong while simulating a borrow: ', error);
     }
   });
 
-  // Transactions
-  let latestDateFound = strToDate(transactions[0].date);
-  transactions.forEach((transaction) => {
-    if (strToDate(transaction.date) > latestDateFound) {
-      latestDateFound = strToDate(transaction.date);
-    }
-  });
+  await Promise.all(borrowPromises);
 
-  const today = DateTime.now();
-  const monthsOffsetFromToday = (today.year - latestDateFound.year) * 12
-    + (today.month - latestDateFound.month);
-
-  const monthsOffsetFromLastMonth = monthsOffsetFromToday > 0 ? monthsOffsetFromToday - 1 : 0;
-
-  transactions.forEach(async (transactionJSON) => {
-    // Shift dates so the transactions are dated up to and including the end of last month
-    const transactionDate = strToDate(transactionJSON.date);
-    const shiftedTransactionDate = transactionDate.plus({
-      months: monthsOffsetFromLastMonth,
-    });
-    const transaction = await Transaction.create({
-      plaidTransactionId: transactionJSON.plaid_transaction_id,
-      plaidCategoryId: transactionJSON.plaid_category_id,
-      categories: transactionJSON.categories,
-      type: transactionJSON.type,
-      name: transactionJSON.name,
-      amount: transactionJSON.amount,
-      isoCurrencyCode: transactionJSON.iso_currency_code,
-      unofficialCurrencyCode: transactionJSON.unofficial_currency_code,
-      date: shiftedTransactionDate.toSQL(),
-      pending: transactionJSON.pending,
-    });
-
-    transaction.setAccount(accountLookup[transactionJSON.plaid_account_id]);
-    transaction.setUser(user1);
-  });
-
-  console.log('seeded users, accounts and transactions');
+  console.log(`Successfully created ${numBorrowsCreated} borrows!`);
 }
 
 async function runSeed() {

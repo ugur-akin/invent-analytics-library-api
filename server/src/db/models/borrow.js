@@ -18,7 +18,7 @@ const Borrow = db.define('borrow', {
   },
   score: {
     type: DataTypes.INTEGER,
-    //TODO: Validate between 0-10
+    // TODO: Validate between 0-10
   },
 });
 
