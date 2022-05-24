@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const db = require('../db');
 
+// TODO: Rename to loan
 const Borrow = db.define('borrow', {
   id: {
     type: DataTypes.BIGINT,
@@ -15,6 +16,7 @@ const Borrow = db.define('borrow', {
   returnedAt: {
     type: DataTypes.DATE,
     // TODO: validate against now and takenAt
+    // TODO: Validate score and returned date both exist or don't
   },
   score: {
     type: DataTypes.INTEGER,

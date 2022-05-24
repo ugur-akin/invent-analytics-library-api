@@ -14,13 +14,15 @@ const { books: bookJsons } = JSON.parse(rawBooks);
 
 const _RANDOM_SEED = 294729043;
 const _MAX_NUM_BORROWS = 50;
-const _MIN_PAST_DATE = new Date(2021, 0);
+const _MIN_DATE = Date.UTC(2021, 0);
+const _MAX_DATE = Date.now();
+
 const _MIN_BORROW_DURATION_IN_MS = 1 * 60 * 60 * 100; // 1 hour
 const _MAX_BORROW_DURATION_IN_MS = 10 * 24 * 60 * 60 * 100; // 10 days
 
 seedrandom(_RANDOM_SEED, { global: true });
 
-const randomDate = (minDate, maxDate = Date.now()) => {
+const randomDate = (minDate = _MIN_DATE, maxDate = _MAX_DATE) => {
   const msDiff = maxDate - minDate;
   const msElapsed = Math.floor(Math.random() * msDiff);
   const clampedMsElapsed = Math.min(
@@ -79,7 +81,7 @@ async function seed() {
         // NOTE: Exclude last book so we always have one without a score.
         const bookIdx = Math.floor(Math.random() * books.length);
         const book = books[bookIdx];
-        const takenAt = randomDate(_MIN_PAST_DATE);
+        const takenAt = randomDate();
 
         const isReturned = !!Math.round(Math.random());
         const returnedAt = isReturned ? randomDate(takenAt) : null;
@@ -92,9 +94,8 @@ async function seed() {
           takenAt,
           returnedAt,
           score,
-        });
+        }).then(() => (numBorrowsCreated += 1));
 
-        numBorrowsCreated += 1;
         return borrow;
       });
 
