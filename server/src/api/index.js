@@ -1,13 +1,13 @@
 const express = require('express');
 
-const accounts = require('./accounts');
-const transactions = require('./transactions');
 const auth = require('./auth');
+const users = require('./users');
 
 const router = express.Router();
 
 router.use('/', auth);
-router.use('/accounts', accounts);
-router.use('/transactions', transactions);
+router.use('/users', users);
+// router.use('/books', books);
+// router.use('/borrows', borrows);
 
 module.exports = router;
