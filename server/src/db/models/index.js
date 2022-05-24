@@ -1,24 +1,15 @@
 const User = require('./user');
-const Account = require('./account');
-const Transaction = require('./transaction');
+const Book = require('./book');
+const Borrow = require('./borrow');
 
-User.hasMany(Account);
-Account.belongsTo(User, {
-  foreignKey: 'userId'
-});
+User.hasMany(Borrow);
+Borrow.belongsTo(User);
 
-User.hasMany(Transaction);
-Transaction.belongsTo(User, {
-  foreignKey: 'userId'
-});
-
-Account.hasMany(Transaction);
-Transaction.belongsTo(Account, {
-  foreignKey: 'accountId'
-});
+Book.hasMany(Borrow);
+Borrow.belongsTo(Book);
 
 module.exports = {
   User,
-  Account,
-  Transaction,
+  Book,
+  Borrow,
 };
