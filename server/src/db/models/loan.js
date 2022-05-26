@@ -1,7 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../db');
 
-// TODO: Validate unique by composite of (userId, bookId, returnedAt)
 const Loan = db.define(
   'loan',
   {
@@ -14,20 +13,22 @@ const Loan = db.define(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      // validate: {
-      //   isBefore: {
-      //     args: DataTypes.NOW,
-      //     msg: "Can't initiate loans in the future.",
-      //   },
-      // },
+      validate: {
+        loanedInFuture(value) {
+          if (value > Date.now()) {
+            throw new Error("Can't loan books in the future.");
+          }
+        },
+      },
     },
     returnedAt: {
       type: DataTypes.DATE,
       defaultValue: null,
       validate: {
-        isBefore: {
-          args: DataTypes.NOW,
-          msg: "Can't return books in the future.",
+        returnedInFuture(value) {
+          if (value > Date.now()) {
+            throw new Error("Can't return books in the future.");
+          }
         },
       },
     },
@@ -39,24 +40,23 @@ const Loan = db.define(
         max: 10,
       },
     },
+  },
+  {
+    validate: {
+      notReturnedOrRated() {
+        if ((this.returnedAt !== null) !== (this.score !== null)) {
+          throw new Error(
+            'A loan must either have both return date and score set or neither.'
+          );
+        }
+      },
+      invalidLoanDates() {
+        if (this.returnedAt && this.loanedAt > this.returnedAt) {
+          throw new Error('Loan must start before its return date.');
+        }
+      },
+    },
   }
-  // {
-  //   sequelize,
-  //   validate: {
-  //     notReturnedOrRated() {
-  //       if ((this.returnedAt !== null) !== (this.score !== null)) {
-  //         throw new Error(
-  //           'A loan must either have both return date and score set or neither.'
-  //         );
-  //       }
-  //     },
-  //     invalidLoanDates() {
-  //       if (this.returnedAt && this.loanedAt > this.returnedAt) {
-  //         throw new Error('Loan must start before its return date.');
-  //       }
-  //     },
-  //   },
-  // }
 );
 
 /**
@@ -124,7 +124,7 @@ Loan.loanBookToUser = async function (userId, bookId, options) {
       returnedAt: null,
     },
   });
-  // TODO: Proper error handlign
+  // TODO: Proper error handling
   if (activeLoanOfSameBook.length !== 0) {
     throw new Error('Already loaned');
   }
