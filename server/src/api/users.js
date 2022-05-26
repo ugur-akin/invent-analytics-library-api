@@ -12,6 +12,24 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.post('/', async (req, res, next) => {
+  // TODO: Validate body (and name in model?)
+  // TODO: Elaborate on the validation errors in message.
+  try {
+    const { name } = req.body;
+    await User.create({ name });
+
+    res.status(201).end();
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res
+        .status(400)
+        .json({ error: 'Invalid request body, expected a valid name.' });
+    }
+    next(error);
+  }
+});
+
 router.get('/:userId', async (req, res, next) => {
   // TODO: Validate userId
   try {
@@ -54,20 +72,24 @@ router.get('/:userId', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
-  // TODO: Validate body (and name in model?)
-  // TODO: Elaborate on the validation errors in message.
+router.post('/:userId/borrow/:bookId', async (req, res, next) => {
   try {
-    const { name } = req.body;
-    await User.create({ name });
+    // TODO: Clarify whether to worry about inventory size (e.g. assume only 1 copy or inf?)
+    await Loan.loanBookToUser(req.params.userId, req.params.bookId);
 
-    res.status(201).end();
+    res.status(204).end();
   } catch (error) {
-    if (error.name === 'SequelizeValidationError') {
-      return res
-        .status(400)
-        .json({ error: 'Invalid request body, expected a valid name.' });
-    }
+    next(error);
+  }
+});
+
+router.post('/:userId/return/:bookId', async (req, res, next) => {
+  try {
+    const { score } = req.body;
+    await Loan.returnAndRateBook(req.params.userId, req.params.bookId, score);
+
+    res.status(204).end();
+  } catch (error) {
     next(error);
   }
 });
