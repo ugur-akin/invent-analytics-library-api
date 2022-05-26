@@ -7,6 +7,7 @@ const Book = db.define('book', {
     primaryKey: true,
     autoIncrement: true,
   },
+  // TODO: Format value (pre-save mw)?
   name: {
     type: DataTypes.STRING,
     allowNull: false,

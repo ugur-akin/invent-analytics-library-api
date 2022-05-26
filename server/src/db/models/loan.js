@@ -31,7 +31,7 @@ const Loan = db.define('loan', {
  * @returns Array<Loan>
  */
 Loan.findLoansByUser = async function (userId, options) {
-  const { whereOption, ...restOptions } = options;
+  const { where: whereOption, ...restOptions } = options;
 
   let augmentedWhereClause = {
     userId,
@@ -40,10 +40,37 @@ Loan.findLoansByUser = async function (userId, options) {
     augmentedWhereClause = { ...whereOption, ...augmentedWhereClause };
   }
 
-  return Loan.findAll({
+  const augmentedOptions = {
     where: augmentedWhereClause,
     ...restOptions,
-  });
+  };
+
+  return Loan.findAll(augmentedOptions);
+};
+
+/**
+ * Get all loans of the book given
+ *
+ * @param {Number} bookId
+ * @param {Object} options options to be forwarded into query.
+ * @returns Array<Loan>
+ */
+Loan.findLoansByBook = async function (bookId, options) {
+  const { where: whereOption, ...otherOptions } = options;
+
+  let augmentedWhereClause = {
+    bookId,
+  };
+  if (whereOption) {
+    augmentedWhereClause = { ...whereOption, ...augmentedWhereClause };
+  }
+
+  const augmentedOptions = {
+    where: augmentedWhereClause,
+    ...otherOptions,
+  };
+
+  return Loan.findAll(augmentedOptions);
 };
 
 module.exports = Loan;

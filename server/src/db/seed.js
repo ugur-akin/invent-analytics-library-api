@@ -13,12 +13,12 @@ const rawBooks = fs.readFileSync('src/db/json/books.json');
 const { books: bookJsons } = JSON.parse(rawBooks);
 
 const _RANDOM_SEED = 294729043;
-const _MAX_NUM_BORROWS = 50;
+const _MAX_NUM_LOANS = 50;
 const _MIN_DATE = Date.UTC(2021, 0);
 const _MAX_DATE = Date.now();
 
-const _MIN_BORROW_DURATION_IN_MS = 1 * 60 * 60 * 100; // 1 hour
-const _MAX_BORROW_DURATION_IN_MS = 10 * 24 * 60 * 60 * 100; // 10 days
+const _MIN_LOAN_DURATION_IN_MS = 1 * 60 * 60 * 100; // 1 hour
+const _MAX_LOAN_DURATION_IN_MS = 10 * 24 * 60 * 60 * 100; // 10 days
 
 seedrandom(_RANDOM_SEED, { global: true });
 
@@ -26,8 +26,8 @@ const randomDate = (minDate = _MIN_DATE, maxDate = _MAX_DATE) => {
   const msDiff = maxDate - minDate;
   const msElapsed = Math.floor(Math.random() * msDiff);
   const clampedMsElapsed = Math.min(
-    Math.max(msElapsed, _MAX_BORROW_DURATION_IN_MS),
-    _MIN_BORROW_DURATION_IN_MS
+    Math.max(msElapsed, _MAX_LOAN_DURATION_IN_MS),
+    _MIN_LOAN_DURATION_IN_MS
   );
   const result = minDate + clampedMsElapsed;
   return result;
@@ -71,15 +71,15 @@ async function seed() {
   console.log(`Successfully created ${users.length} users!`);
   console.log(`Successfully created ${books.length} books!`);
 
-  // Borrows
-  let numBorrowsCreated = 0;
-  const borrowPromises = users.flatMap(async (user) => {
+  // Loans
+  let numLoansCreated = 0;
+  const loanPromises = users.flatMap(async (user) => {
     try {
-      const numBorrows = Math.floor(Math.random() * _MAX_NUM_BORROWS);
-      const borrowArray = Array.from({ length: numBorrows }, (i) => i);
-      const borrowPromisesForUser = borrowArray.flatMap(() => {
+      const numLoans = Math.floor(Math.random() * _MAX_NUM_LOANS);
+      const loanArray = Array.from({ length: numLoans }, (i) => i);
+      const loanPromisesForUser = loanArray.flatMap(() => {
         // NOTE: Exclude last book so we always have one without a score.
-        const bookIdx = Math.floor(Math.random() * books.length);
+        const bookIdx = Math.floor(Math.random() * (books.length - 1));
         const book = books[bookIdx];
         const takenAt = randomDate();
 
@@ -88,26 +88,26 @@ async function seed() {
 
         const score = isReturned ? Math.floor(Math.random() * 10) : null;
 
-        const borrow = Loan.create({
+        const loan = Loan.create({
           userId: user.id,
           bookId: book.id,
           takenAt,
           returnedAt,
           score,
-        }).then(() => (numBorrowsCreated += 1));
+        }).then(() => (numLoansCreated += 1));
 
-        return borrow;
+        return loan;
       });
 
-      return Promise.all(borrowPromisesForUser);
+      return Promise.all(loanPromisesForUser);
     } catch (error) {
-      console.log('Something went wrong while simulating a borrow: ', error);
+      console.log('Something went wrong while simulating a loan: ', error);
     }
   });
 
-  await Promise.all(borrowPromises);
+  await Promise.all(loanPromises);
 
-  console.log(`Successfully created ${numBorrowsCreated} borrows!`);
+  console.log(`Successfully created ${numLoansCreated} loans!`);
 }
 
 async function runSeed() {

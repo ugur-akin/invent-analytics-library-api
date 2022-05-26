@@ -3,9 +3,13 @@ const { User, Book, Loan } = require('../db/models');
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  const users = await User.findAll();
-  res.json(users);
+router.get('/', async (req, res, next) => {
+  try {
+    const users = await User.findAll();
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get('/:userId', async (req, res, next) => {
@@ -52,6 +56,7 @@ router.get('/:userId', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   // TODO: Validate body (and name in model?)
+  // TODO: Elaborate on the validation errors in message.
   try {
     const { name } = req.body;
     await User.create({ name });
