@@ -18,20 +18,23 @@ const _MIN_DATE = Date.UTC(2021, 0);
 const _MAX_DATE = Date.now();
 
 const _MIN_LOAN_DURATION_IN_MS = 1 * 60 * 60 * 100; // 1 hour
-const _MAX_LOAN_DURATION_IN_MS = 10 * 24 * 60 * 60 * 100; // 10 days
+const _MAX_LOAN_DURATION_IN_MS = 6 * 30 * 24 * 60 * 60 * 100; // 6 months
 
 seedrandom(_RANDOM_SEED, { global: true });
 
-const randomDate = (minDate = _MIN_DATE, maxDate = _MAX_DATE) => {
+const randomDateEpoch = (minDate = _MIN_DATE, maxDate = _MAX_DATE) => {
   const msDiff = maxDate - minDate;
   const msElapsed = Math.floor(Math.random() * msDiff);
   const clampedMsElapsed = Math.min(
     Math.max(msElapsed, _MAX_LOAN_DURATION_IN_MS),
     _MIN_LOAN_DURATION_IN_MS
   );
+
   const result = minDate + clampedMsElapsed;
   return result;
 };
+
+const epochToDateStr = (epoch) => new Date(epoch).toUTCString();
 
 async function seed() {
   await db.sync({ force: true });
@@ -81,17 +84,24 @@ async function seed() {
         // NOTE: Exclude last book so we always have one without a score.
         const bookIdx = Math.floor(Math.random() * (books.length - 1));
         const book = books[bookIdx];
-        const takenAt = randomDate();
+        const loanedAt = randomDateEpoch();
 
         const isReturned = !!Math.round(Math.random());
-        const returnedAt = isReturned ? randomDate(takenAt) : null;
-
+        const maxReturnDate = Math.min(
+          loanedAt + _MAX_LOAN_DURATION_IN_MS,
+          _MAX_DATE
+        );
+        const returnedAt = isReturned
+          ? randomDateEpoch(loanedAt, maxReturnDate)
+          : null;
         const score = isReturned ? Math.floor(Math.random() * 10) : null;
+
+        console.log(loanedAt, returnedAt);
 
         const loan = Loan.create({
           userId: user.id,
           bookId: book.id,
-          takenAt,
+          loanedAt,
           returnedAt,
           score,
         }).then(() => (numLoansCreated += 1));

@@ -15,8 +15,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-app.use(middlewares.auth);
-
 app.use('/', api);
 
 app.use(middlewares.notFound);

@@ -2,30 +2,62 @@ const { DataTypes } = require('sequelize');
 const db = require('../db');
 
 // TODO: Validate unique by composite of (userId, bookId, returnedAt)
-const Loan = db.define('loan', {
-  id: {
-    type: DataTypes.BIGINT,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  takenAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-    // TODO: validate against now
-  },
-  returnedAt: {
-    type: DataTypes.DATE,
-    defaultValue: null,
-    // TODO: validate against now and takenAt
-    // TODO: Validate score and returned date both exist or don't
-  },
-  score: {
-    type: DataTypes.INTEGER,
-    defaultValue: null,
-    // TODO: Validate between 0-10
-  },
-});
+const Loan = db.define(
+  'loan',
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    loanedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      // validate: {
+      //   isBefore: {
+      //     args: DataTypes.NOW,
+      //     msg: "Can't initiate loans in the future.",
+      //   },
+      // },
+    },
+    returnedAt: {
+      type: DataTypes.DATE,
+      defaultValue: null,
+      validate: {
+        isBefore: {
+          args: DataTypes.NOW,
+          msg: "Can't return books in the future.",
+        },
+      },
+    },
+    score: {
+      type: DataTypes.INTEGER,
+      defaultValue: null,
+      validate: {
+        min: 0,
+        max: 10,
+      },
+    },
+  }
+  // {
+  //   sequelize,
+  //   validate: {
+  //     notReturnedOrRated() {
+  //       if ((this.returnedAt !== null) !== (this.score !== null)) {
+  //         throw new Error(
+  //           'A loan must either have both return date and score set or neither.'
+  //         );
+  //       }
+  //     },
+  //     invalidLoanDates() {
+  //       if (this.returnedAt && this.loanedAt > this.returnedAt) {
+  //         throw new Error('Loan must start before its return date.');
+  //       }
+  //     },
+  //   },
+  // }
+);
 
 /**
  * Get all loans for a user
