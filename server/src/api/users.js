@@ -50,4 +50,21 @@ router.get('/:userId', async (req, res, next) => {
   }
 });
 
+router.post('/', async (req, res, next) => {
+  // TODO: Validate body (and name in model?)
+  try {
+    const { name } = req.body;
+    await User.create({ name });
+
+    res.status(201).end();
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res
+        .status(400)
+        .json({ error: 'Invalid request body, expected a valid name.' });
+    }
+    next(error);
+  }
+});
+
 module.exports = router;
