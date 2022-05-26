@@ -1,15 +1,15 @@
 const User = require('./user');
 const Book = require('./book');
-const Borrow = require('./borrow');
+const Loan = require('./loan');
 
-User.hasMany(Borrow);
-Borrow.belongsTo(User);
+User.hasMany(Loan);
+Loan.belongsTo(User);
 
-Book.hasMany(Borrow);
-Borrow.belongsTo(Book);
+Book.hasMany(Loan);
+Loan.belongsTo(Book);
 
 module.exports = {
   User,
   Book,
-  Borrow,
+  Loan,
 };

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const seedrandom = require('seedrandom');
 
-const { User, Book, Borrow } = require('./models');
+const { User, Book, Loan } = require('./models');
 const db = require('./db');
 
 const rawUsers = fs.readFileSync('src/db/json/users.json');
@@ -88,7 +88,7 @@ async function seed() {
 
         const score = isReturned ? Math.floor(Math.random() * 10) : null;
 
-        const borrow = Borrow.create({
+        const borrow = Loan.create({
           userId: user.id,
           bookId: book.id,
           takenAt,

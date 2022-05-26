@@ -1,13 +1,53 @@
 const express = require('express');
-const { User } = require('../db/models');
+const { User, Book, Loan } = require('../db/models');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const users = await User.findAll({
-    attributes: ['id', 'name'],
-  });
+  const users = await User.findAll();
   res.json(users);
+});
+
+router.get('/:userId', async (req, res, next) => {
+  // TODO: Validate userId
+  try {
+    // TODO: Check if user is valid.
+    const user = await User.findByPk(req.params.userId);
+    const loans = await Loan.findLoansByUser(req.params.userId, {
+      include: Book,
+    });
+
+    const returnedLoans = [];
+    const activeLoans = [];
+    loans.forEach((loan) => {
+      const projected = {
+        name: loan.book.name,
+      };
+
+      if (loan.returnedAt) {
+        projected.userScore = loan.score;
+        returnedLoans.push(projected);
+      } else {
+        activeLoans.push(projected);
+      }
+    });
+
+    const result = {
+      id: user.id,
+      name: user.name,
+      books: {
+        past: returnedLoans,
+        present: activeLoans,
+      },
+    };
+
+    res.json(result);
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ error: 'Validation error' });
+    }
+    next(error);
+  }
 });
 
 module.exports = router;
