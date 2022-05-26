@@ -9,6 +9,5 @@ const router = express.Router();
 router.use('/', auth);
 router.use('/users', users);
 router.use('/books', books);
-// router.use('/borrows', borrows);
 
 module.exports = router;

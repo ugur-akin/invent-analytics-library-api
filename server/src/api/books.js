@@ -1,10 +1,10 @@
 const express = require('express');
 const sequelize = require('sequelize');
 const { Book, Loan } = require('../db/models');
+const { ResourceNotFoundError } = require('../utils');
 
 const router = express.Router();
 
-// TODO: Err handle not found
 router.get('/', async (req, res, next) => {
   try {
     const books = await Book.findAll();
@@ -18,6 +18,9 @@ router.get('/', async (req, res, next) => {
 router.get('/:bookId', async (req, res, next) => {
   try {
     const book = await Book.findByPk(req.params.bookId);
+    if (!book) {
+      throw new ResourceNotFoundError('Book', req.params.bookId);
+    }
 
     const [loansAgg] = await Loan.findLoansByBook(req.params.bookId, {
       where: {
@@ -28,7 +31,9 @@ router.get('/:bookId', async (req, res, next) => {
       attributes: [[sequelize.fn('AVG', sequelize.col('score')), 'avgScore']],
     });
 
-    const score = loansAgg.get('avgScore').toFixed(2) || -1;
+    const score = loansAgg.get('avgScore')
+      ? loansAgg.get('avgScore').toFixed(2)
+      : -1;
 
     const result = {
       id: book.id,

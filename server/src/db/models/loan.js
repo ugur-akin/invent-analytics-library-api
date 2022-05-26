@@ -124,9 +124,11 @@ Loan.loanBookToUser = async function (userId, bookId, options) {
       returnedAt: null,
     },
   });
-  // TODO: Proper error handling
+
   if (activeLoanOfSameBook.length !== 0) {
-    throw new Error('Already loaned');
+    const err = new Error('The user already has an active load on this book.');
+    err.name = 'SequelizeValidationError';
+    throw err;
   }
 
   return Loan.create(

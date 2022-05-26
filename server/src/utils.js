@@ -1,5 +1,8 @@
-// const ErrorTypes = {
-//   INSTANCE_NOT_FOUND,
-// };
+class ResourceNotFoundError extends Error {
+  constructor(resource, id) {
+    const msg = `${resource} ${id} Not Found`;
+    super(msg);
+  }
+}
 
-// module.exports = { generateSignedJWT, parseBearerToken };
+module.exports = { ResourceNotFoundError };

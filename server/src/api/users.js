@@ -1,5 +1,6 @@
 const express = require('express');
 const { User, Book, Loan } = require('../db/models');
+const { ResourceNotFoundError } = require('../utils');
 
 const router = express.Router();
 
@@ -13,28 +14,22 @@ router.get('/', async (req, res, next) => {
 });
 
 router.post('/', async (req, res, next) => {
-  // TODO: Validate body (and name in model?)
-  // TODO: Elaborate on the validation errors in message.
   try {
     const { name } = req.body;
     await User.create({ name });
 
     res.status(201).end();
   } catch (error) {
-    if (error.name === 'SequelizeValidationError') {
-      return res
-        .status(400)
-        .json({ error: 'Invalid request body, expected a valid name.' });
-    }
     next(error);
   }
 });
 
 router.get('/:userId', async (req, res, next) => {
-  // TODO: Validate userId
   try {
-    // TODO: Check if user is valid.
     const user = await User.findByPk(req.params.userId);
+    if (!user) {
+      throw new ResourceNotFoundError('User', req.params.userId);
+    }
     const loans = await Loan.findLoansByUser(req.params.userId, {
       include: Book,
     });
@@ -86,6 +81,7 @@ router.post('/:userId/borrow/:bookId', async (req, res, next) => {
 router.post('/:userId/return/:bookId', async (req, res, next) => {
   try {
     const { score } = req.body;
+    // TODO: Separate loans/ratings tables
     await Loan.returnAndRateBook(req.params.userId, req.params.bookId, score);
 
     res.status(204).end();
