@@ -3,7 +3,9 @@
 const fs = require('fs');
 const seedrandom = require('seedrandom');
 
-const { User, Book, Loan, Rating } = require('./models');
+const {
+  User, Book, Loan, Rating
+} = require('./models');
 const db = require('./db');
 
 const rawUsers = fs.readFileSync('src/db/json/users.json');

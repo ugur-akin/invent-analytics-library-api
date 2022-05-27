@@ -51,7 +51,6 @@ Rating.getAverageRatingForBook = async function (
     { type: sequelize.QueryTypes.SELECT }
   );
 
-  console.log(queryResult);
   return queryResult.avgRating;
 };
 

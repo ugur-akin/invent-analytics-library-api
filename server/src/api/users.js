@@ -1,5 +1,7 @@
 const express = require('express');
-const { User, Book, Loan, Rating } = require('../db/models');
+const {
+  User, Book, Loan, Rating
+} = require('../db/models');
 const { ResourceNotFoundError } = require('../utils');
 
 const router = express.Router();
