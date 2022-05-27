@@ -32,22 +32,17 @@ const Loan = db.define(
         },
       },
     },
-    score: {
-      type: DataTypes.INTEGER,
-      defaultValue: null,
-      validate: {
-        min: 0,
-        max: 10,
-      },
-    },
   },
   {
     validate: {
+      // NOTE: In realistic circumstances, it would be best to make ratings optional
       notReturnedOrRated() {
-        if ((this.returnedAt !== null) !== (this.score !== null)) {
-          throw new Error(
-            'A loan must either have both return date and score set or neither.'
-          );
+        if (this.returnedAt !== null && this.ratingId === null) {
+          throw new Error('Returned books must have a rating.');
+        }
+
+        if (this.returnedAt === null && this.ratingId !== null) {
+          throw new Error("Can't rate book before returning it.");
         }
       },
       invalidLoanDates() {

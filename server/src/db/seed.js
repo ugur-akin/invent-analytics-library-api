@@ -3,7 +3,7 @@
 const fs = require('fs');
 const seedrandom = require('seedrandom');
 
-const { User, Book, Loan } = require('./models');
+const { User, Book, Loan, Rating } = require('./models');
 const db = require('./db');
 
 const rawUsers = fs.readFileSync('src/db/json/users.json');
@@ -73,7 +73,7 @@ async function seed() {
   const loanPromises = users.flatMap(async (user) => {
     const numLoans = Math.floor(Math.random() * _MAX_NUM_LOANS);
     const loanArray = Array.from({ length: numLoans }, (i) => i);
-    const loanPromisesForUser = loanArray.flatMap(() => {
+    const loanPromisesForUser = loanArray.flatMap(async () => {
       // NOTE: Exclude last book so we always have one without a score.
       const bookIdx = Math.floor(Math.random() * (books.length - 1));
       const book = books[bookIdx];
@@ -89,14 +89,21 @@ async function seed() {
       const returnedAt = isReturned
         ? randomDateEpoch(loanedAt, maxReturnDate)
         : null;
-      const score = isReturned ? Math.floor(Math.random() * 10) : null;
+      const ratingValue = isReturned ? Math.floor(Math.random() * 10) : null;
+
+      let rating = null;
+      if (isReturned) {
+        rating = await Rating.create({
+          rating: ratingValue,
+        });
+      }
 
       const loan = Loan.create({
         userId: user.id,
         bookId: book.id,
         loanedAt,
         returnedAt,
-        score,
+        ratingId: rating && rating.id,
       })
         .then(() => {
           numLoansCreated += 1;
