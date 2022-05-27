@@ -1,6 +1,7 @@
 const express = require('express');
-const { User, Book, Loan } = require('../db/models');
+const { User, Book, Loan, Rating } = require('../db/models');
 const { ResourceNotFoundError } = require('../utils');
+const sequelize = require('sequelize');
 
 const router = express.Router();
 
@@ -13,17 +14,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
-  try {
-    const { name } = req.body;
-    await User.create({ name });
-
-    res.status(201).end();
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.get('/:userId', async (req, res, next) => {
   try {
     const user = await User.findByPk(req.params.userId);
@@ -31,7 +21,7 @@ router.get('/:userId', async (req, res, next) => {
       throw new ResourceNotFoundError('User', req.params.userId);
     }
     const loans = await Loan.findLoansByUser(req.params.userId, {
-      include: Book,
+      include: [Book, Rating],
     });
 
     const returnedLoans = [];
@@ -42,7 +32,7 @@ router.get('/:userId', async (req, res, next) => {
       };
 
       if (loan.returnedAt) {
-        projected.userScore = loan.score;
+        projected.userScore = loan.rating.rating;
         returnedLoans.push(projected);
       } else {
         activeLoans.push(projected);
@@ -60,9 +50,17 @@ router.get('/:userId', async (req, res, next) => {
 
     res.json(result);
   } catch (error) {
-    if (error.name === 'SequelizeValidationError') {
-      return res.status(400).json({ error: 'Validation error' });
-    }
+    next(error);
+  }
+});
+
+router.post('/', async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    await User.create({ name });
+
+    res.status(201).end();
+  } catch (error) {
     next(error);
   }
 });
@@ -81,8 +79,8 @@ router.post('/:userId/borrow/:bookId', async (req, res, next) => {
 router.post('/:userId/return/:bookId', async (req, res, next) => {
   try {
     const { score } = req.body;
-    // TODO: Separate loans/ratings tables
-    await Loan.returnAndRateBook(req.params.userId, req.params.bookId, score);
+
+    await Loan.rateAndReturnBook(req.params.userId, req.params.bookId, score);
 
     res.status(204).end();
   } catch (error) {
