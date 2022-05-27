@@ -94,6 +94,8 @@ async function seed() {
       let rating = null;
       if (isReturned) {
         rating = await Rating.create({
+          userId: user.id,
+          bookId: book.id,
           rating: ratingValue,
         });
       }

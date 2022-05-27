@@ -4,15 +4,31 @@ const Loan = require('./loan');
 const Rating = require('./rating');
 
 User.hasMany(Loan);
-Loan.belongsTo(User);
+Loan.belongsTo(User, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
 
 Book.hasMany(Loan);
-Loan.belongsTo(Book);
+Loan.belongsTo(Book, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
 
 User.hasMany(Rating);
-Rating.belongsTo(User);
+Rating.belongsTo(User, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
 Book.hasMany(Rating);
-Rating.belongsTo(Book);
+Rating.belongsTo(Book, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
 
 Rating.hasOne(Loan);
 Loan.belongsTo(Rating);

@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../db');
+const Rating = require('./rating');
 
 const Loan = db.define(
   'loan',
@@ -8,6 +9,18 @@ const Loan = db.define(
       type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
+    },
+    userId: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    bookId: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    ratingId: {
+      type: DataTypes.BIGINT,
+      defaultValue: null,
     },
     loanedAt: {
       type: DataTypes.DATE,
@@ -145,7 +158,7 @@ Loan.loanBookToUser = async function (userId, bookId, options) {
  * @param {Number} score rating score
  * @returns Array<Loan>
  */
-Loan.returnAndRateBook = async function (userId, bookId, score) {
+Loan.rateAndReturnBook = async function (userId, bookId, score) {
   const [activeLoan] = await Loan.findLoansByUser(userId, {
     where: {
       bookId,
@@ -154,10 +167,21 @@ Loan.returnAndRateBook = async function (userId, bookId, score) {
   });
 
   if (activeLoan) {
-    activeLoan.returnedAt = new Date();
-    activeLoan.score = score;
+    return db.transaction(async (tsx) => {
+      const rating = await Rating.create(
+        {
+          userId,
+          bookId,
+          rating: score,
+        },
+        { transaction: tsx }
+      );
 
-    return activeLoan.save();
+      activeLoan.ratingId = rating.id;
+      activeLoan.returnedAt = new Date();
+
+      await activeLoan.save({ transaction: tsx });
+    });
   }
 };
 
